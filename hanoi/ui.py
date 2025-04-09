@@ -3,43 +3,6 @@ from .game import Hanoi
 
 game_instance = None
 
-def start_game(num_disks):
-    global game_instance
-    game_instance = Hanoi(num_disks)
-    return f"Juego iniciado con {num_disks} discos.", format_towers(game_instance.get_state())
-
-def make_move(from_tower, to_tower):
-    global game_instance
-    if not game_instance:
-        return "Inicia el juego primero.", []
-
-    success, msg = game_instance.move(from_tower, to_tower)
-    if game_instance.is_completed():
-        msg += " ¡Has completado el juego!"
-    return msg, format_towers(game_instance.get_state())
-
-
-def ui():
-    with gr.Blocks() as demo:
-        gr.Markdown("### Torres de Hanoi")
-
-        num_disks = gr.Slider(3, 6, value=3, step=1, label="Número de Discos")
-        start_btn = gr.Button("Iniciar Juego")
-        state_output = gr.Textbox(label="Estado de las Torres", lines=10)
-
-        message_output = gr.Textbox(label="Mensaje")
-
-        with gr.Row():
-            from_tower = gr.Number(label="Desde Torre (0-2)", value=0)
-            to_tower = gr.Number(label="Hacia Torre (0-2)", value=2)
-
-        move_btn = gr.Button("Mover Disco")
-
-        start_btn.click(start_game, inputs=[num_disks], outputs=[message_output, state_output])
-        move_btn.click(make_move, inputs=[from_tower, to_tower], outputs=[message_output, state_output])
-
-    return demo
-
 def format_towers(towers):
     output = ""
     max_height = max(len(t) for t in towers)
@@ -53,3 +16,27 @@ def format_towers(towers):
     output += " [0]  [1]  [2] "
     return output
 
+def start_game(num_disks):
+    global game_instance
+    game_instance = Hanoi(num_disks)
+    game_instance.solve()
+
+    towers_text = format_towers(game_instance.get_state())
+    history_text = "\n".join(game_instance.get_history())
+    move_count = f"Total de movimientos: {game_instance.get_move_count()}"
+
+    full_output = f"{towers_text}\n\n{move_count}\n\n{history_text}"
+    return f"Resuelto con {num_disks} discos.", full_output
+
+def ui():
+    with gr.Blocks() as demo:
+        gr.Markdown("### Torres de Hanoi Automático 🧠")
+
+        num_disks = gr.Slider(1, 6, value=3, step=1, label="Número de Discos")
+        start_btn = gr.Button("Resolver")
+        message_output = gr.Textbox(label="Mensaje")
+        state_output = gr.Textbox(label="Solución", lines=30)
+
+        start_btn.click(start_game, inputs=[num_disks], outputs=[message_output, state_output])
+
+    return demo

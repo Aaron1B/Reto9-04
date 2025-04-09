@@ -3,20 +3,30 @@ class Hanoi:
         self.num_disks = num_disks
         self.towers = [list(reversed(range(1, num_disks + 1))), [], []]
         self.moves = 0
+        self.history = []
 
-    def move(self, from_tower, to_tower):
-        if not self.towers[from_tower]:
-            return False, "Torre de origen vacía."
-        if self.towers[to_tower] and self.towers[from_tower][-1] > self.towers[to_tower][-1]:
-            return False, "Movimiento inválido. Disco más grande sobre uno más pequeño."
-        
+    def solve(self):
+        self._move(self.num_disks, 0, 2, 1)
+
+    def _move(self, n, source, target, auxiliary):
+        if n == 1:
+            self._apply_move(source, target)
+        else:
+            self._move(n - 1, source, auxiliary, target)
+            self._apply_move(source, target)
+            self._move(n - 1, auxiliary, target, source)
+
+    def _apply_move(self, from_tower, to_tower):
         disk = self.towers[from_tower].pop()
         self.towers[to_tower].append(disk)
         self.moves += 1
-        return True, f"Movimiento válido. Has movido el disco {disk}."
-
-    def is_completed(self):
-        return len(self.towers[2]) == self.num_disks
+        self.history.append(f"Movimiento {self.moves}: de {from_tower} a {to_tower}")
 
     def get_state(self):
         return [list(tower) for tower in self.towers]
+
+    def get_history(self):
+        return self.history
+
+    def get_move_count(self):
+        return self.moves
