@@ -1,42 +1,21 @@
 import gradio as gr
-from .game import Hanoi
+from .game import HanoiGame
 
-game_instance = None
-
-def format_towers(towers):
-    output = ""
-    max_height = max(len(t) for t in towers)
-    for level in reversed(range(max_height)):
-        for tower in towers:
-            if len(tower) > level:
-                output += f"  {tower[level]}  "
-            else:
-                output += "     "
-        output += "\n"
-    output += " [0]  [1]  [2] "
-    return output
-
-def start_game(num_disks):
-    global game_instance
-    game_instance = Hanoi(num_disks)
-    game_instance.solve()
-
-    towers_text = format_towers(game_instance.get_state())
-    history_text = "\n".join(game_instance.get_history())
-    move_count = f"Total de movimientos: {game_instance.get_move_count()}"
-
-    full_output = f"{towers_text}\n\n{move_count}\n\n{history_text}"
-    return f"Resuelto con {num_disks} discos.", full_output
+def start_hanoi(num_disks):
+    game = HanoiGame(num_disks)
+    game.solve()
+    # Obtener los nodos de la base de datos
+    moves = game.get_all_moves_from_db()
+    moves_text = "\n".join([f"Movimiento {move.move_number}: {move.from_peg} -> {move.to_peg}" for move in moves])
+    return f"Se resolvieron {len(moves)} movimientos.\n\n{moves_text}"
 
 def ui():
     with gr.Blocks() as demo:
-        gr.Markdown("### Torres de Hanoi Automático 🧠")
-
-        num_disks = gr.Slider(1, 6, value=3, step=1, label="Número de Discos")
-        start_btn = gr.Button("Resolver")
-        message_output = gr.Textbox(label="Mensaje")
-        state_output = gr.Textbox(label="Solución", lines=30)
-
-        start_btn.click(start_game, inputs=[num_disks], outputs=[message_output, state_output])
+        gr.Markdown("### Torres de Hanoi")
+        num_disks_input = gr.Number(label="Número de discos", value=3)
+        start_button = gr.Button("Iniciar Juego")
+        output_box = gr.Textbox(label="Movimientos realizados", lines=10)
+        
+        start_button.click(start_hanoi, inputs=[num_disks_input], outputs=[output_box])
 
     return demo

@@ -1,32 +1,43 @@
-class Hanoi:
-    def __init__(self, num_disks=3):
+from .models import HanoiMoveNode, session
+
+class HanoiGame:
+    def __init__(self, num_disks):
         self.num_disks = num_disks
-        self.towers = [list(reversed(range(1, num_disks + 1))), [], []]
-        self.moves = 0
-        self.history = []
+        self.moves = []
+        self.head = None  # Nodo inicial
+        self.tail = None  # Nodo final
 
     def solve(self):
-        self._move(self.num_disks, 0, 2, 1)
+        self._move(self.num_disks, 'A', 'C', 'B')
 
-    def _move(self, n, source, target, auxiliary):
+    def _move(self, n, from_peg, to_peg, aux_peg):
         if n == 1:
-            self._apply_move(source, target)
+            self._store_move(from_peg, to_peg)
         else:
-            self._move(n - 1, source, auxiliary, target)
-            self._apply_move(source, target)
-            self._move(n - 1, auxiliary, target, source)
+            self._move(n - 1, from_peg, aux_peg, to_peg)
+            self._store_move(from_peg, to_peg)
+            self._move(n - 1, aux_peg, to_peg, from_peg)
 
-    def _apply_move(self, from_tower, to_tower):
-        disk = self.towers[from_tower].pop()
-        self.towers[to_tower].append(disk)
-        self.moves += 1
-        self.history.append(f"Movimiento {self.moves}: de {from_tower} a {to_tower}")
+    def _store_move(self, from_peg, to_peg):
+        move_number = len(self.moves) + 1
+        new_move = HanoiMoveNode(from_peg=from_peg, to_peg=to_peg, move_number=move_number)
 
-    def get_state(self):
-        return [list(tower) for tower in self.towers]
+        # Si es el primer movimiento, asignamos el primer nodo
+        if not self.head:
+            self.head = new_move
+        else:
+            self.tail.next_node_id = new_move.id  # Linkeamos el nodo anterior al siguiente
+        self.tail = new_move
+        
+        # Guardar el nodo en la base de datos
+        session.add(new_move)
+        session.commit()
 
-    def get_history(self):
-        return self.history
+        # Almacenar el movimiento en la lista
+        self.moves.append(new_move)
 
-    def get_move_count(self):
+    def get_moves(self):
         return self.moves
+
+    def get_all_moves_from_db(self):
+        return session.query(HanoiMoveNode).all()

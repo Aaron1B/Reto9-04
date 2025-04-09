@@ -1,9 +1,14 @@
 import gradio as gr
 from hanoi.ui import ui as hanoi_ui
+from knight.ui import ui as knight_ui
 
-def main():
-    with gr.TabbedInterface([hanoi_ui()], ["Torres de Hanoi"]) as app:
-        app.launch()
+with gr.Blocks() as app:
+    gr.Markdown("## Juegos Automatizados 🧠🎮")
 
-if __name__ == "__main__":
-    main()
+    with gr.Tab("Torres de Hanoi"):
+        hanoi_ui()
+
+    with gr.Tab("Recorrido del Caballo"):
+        knight_ui()
+
+app.launch()
